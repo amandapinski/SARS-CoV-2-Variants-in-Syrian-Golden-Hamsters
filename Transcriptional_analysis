@@ -1,0 +1,141 @@
+***Run fastqc on raw reads using FastQC***
+This will determine trimming parameters. For all steps, "${ID}" represents unique individual sample IDs.
+```
+
+module load fastqc
+fastqc *fq.gz
+```
+
+***Trimming using TrimGalore***
+Remove adapters and trim 12 bp from 5' end and 2 from 3' end. Run fastqc on output
+```
+module load trim_galore
+
+trim_galore  --clip_R1 12 --three_prime_clip_R1 2 --gzip -o ./ -q 30 -length 50 -fastqc ${ID}.fastq.gz 
+```
+
+***Align reads***
+Create targets.txt file, hisat2.param, slurm.tmpl and .BatchJobs.R in working directory. Make modifications to reference specified genome (e.g., Mesocricetus_auratus.MesAur1.0.dna.toplevel.fa). 
+```
+R
+library(systemPipeR)
+library(GenomicFeatures)
+library(BiocParallel)
+library(ape)
+library(DESeq2)
+library(edgeR)
+```
+
+- Read in targets files. Make sure format is correct.
+```
+targets <- read.delim("targets.txt", comment.char = "#")
+targets
+```
+
+- Create the args object to save information about hisat2 alignment.
+```
+args <- systemArgs(sysma="hisat2.param", mytargets="targets.txt")
+moduleload(modules(args))
+```
+
+- Check alignment script and allocate 20GB of memory for a max run of 20 hours to alignment. Usually, walltime is 20 hours. Here, I am using 96 hours (4 days)
+sysargs(args[1])
+```
+resources <- list(walltime="96:00:00", ntasks=1, ncpus=cores(args), memory="20G") 
+```
+
+- Submit alignment. Change the number of jobs (Njobs) to the number of samples being submitted
+```
+reg <- clusterRun(args, conffile=".BatchJobs.R", template="slurm.tmpl", Njobs=12, runid="01", resourceList=resources)
+
+```
+
+- Quit R and check the stats
+```
+quit()
+```
+
+- Obtain the alignment stats by re-entering R. 
+```
+R
+library(systemPipeR)
+targets <- read.delim("targets.txt", comment.char = "#")
+targets
+args <- systemArgs(sysma="hisat2.param", mytargets="targets.txt")
+file.exists(outpaths(args))
+read_statsDF <- alignStats(args=args)
+write.table(read_statsDF, file="results/alignStats_control.xls", row.names=FALSE, quote=FALSE, sep="\t")
+
+```
+
+***Count reads***
+
+- Start R in the main directory and Load the required packages again
+```
+R
+library(systemPipeR)
+library(GenomicFeatures)
+library(BiocParallel)
+library(ape)
+library(DESeq2)
+library(edgeR)
+```
+
+- Read in targets file. (This file can be found in this repository and contains information about each sample) 
+```
+targets <- read.delim("targets.txt", comment.char = "#")
+targets
+```
+- Create the args object again
+```
+args <- systemArgs(sysma="hisat2.param", mytargets="targets.txt")
+file.exists(outpaths(args))
+```
+
+- The following performs read counting with summarizeOverlaps in parallel mode with multiple cores
+```
+txdb <- loadDb("./Syrian_golden_hamster/Syrian_golden_hamster.sqlite")
+eByg <- exonsBy(txdb, by=c("gene"))
+bfl <- BamFileList(outpaths(args), yieldSize=50000, index=character())
+multicoreParam <- MulticoreParam(workers=8); register(multicoreParam); registered()
+counteByg <- bplapply(bfl, function(x) summarizeOverlaps(eByg, x, mode="Union", ignore.strand=FALSE, inter.feature=TRUE, singleEnd=FAlSE))
+```
+- Wait until read counting is done, then write countDFeByg into an excel file
+```
+countDFeByg <- sapply(seq(along=counteByg), function(x) assays(counteByg[[x]])$counts)
+rownames(countDFeByg) <- names(rowRanges(counteByg[[1]])); colnames(countDFeByg) <- names(outpaths(args))
+write.table(countDFeByg, "results/countDFeByg.xls", col.names=NA, quote=FALSE, sep="\t")
+
+```
+- Generate RPKM normalized expression values from the countDFeByg file
+```
+rpkmDFeByg <- apply(countDFeByg, 2, function(x) returnRPKM(counts=x, ranges=eByg))
+write.table(rpkmDFeByg, "results/rpkmDFeByg.xls", col.names=NA, quote=FALSE, sep="\t")
+```
+
+***Obtain differentially expressed genes (DEGs)***
+- Prior to DEG analysis with EdgeR, make appopriate edits to targets.txt file for any samples to exclude. Enter appropriate comparions in targets.txt. 
+- Load libraries 
+```
+library(systemPipeR)
+library(edgeR)
+```
+- Read in raw counts 
+```
+countDF <- read.delim("results/countDFeByg.xls", row.names=1, check.names=FALSE)
+targets <- read.delim("targets.txt", comment="#")
+cmp <- readComp(file="targets.txt", format="matrix", delim="-")
+edgeDF <- run_edgeR(countDF=countDF, targets=targets, cmp=cmp[[1]], independent=TRUE, mdsplot="")
+
+desc <- read.delim("/bigdata/messaoudilab/apinski/Reference_genomes/hamster_golden_syrian/golden_syrian_hamster_human_annotations_updated.xls", row.names=1)
+
+edgeDF <- cbind(edgeDF, desc[rownames(edgeDF),])
+write.table(edgeDF, "./results/edgeRglm_allcomp.xls", quote=FALSE, sep="\t", col.names = NA)
+
+```
+***Merge RPKM with edgeRglm sheet***
+```
+edgeR <- read.delim("./results/edgeRglm.xls", sep="\t", header=TRUE)
+rpkm <- read.delim("./results/rpkmDFeByg.xls", sep="\t", header=TRUE)
+edgeR_rpkm <- merge(edgeR, rpkm, by.x="GENE", by.y="GENE", all=TRUE)
+write.table(edgeR_rpkm, file="./results/edgeR_rpkm.xls", sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
