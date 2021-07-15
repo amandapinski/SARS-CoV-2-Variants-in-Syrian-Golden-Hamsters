@@ -1,0 +1,22 @@
+#<CMP> CMPset1:UK-control, WA-control, SA-control, UK-WA, UK-SA, WA-SA
+FileName        SampleName	Factor
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/control1_trimmed.fq.gz	control1        control
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/control2_trimmed.fq.gz	control2        control
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/control3_trimmed.fq.gz	control3        control
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/control4_trimmed.fq.gz	control4        control
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/control5_trimmed.fq.gz	control5        control
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/UK6_trimmed.fq.gz   UK6     UK
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/UK7_trimmed.fq.gz   UK7     UK
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/UK8_trimmed.fq.gz  UK8     UK
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/UK9_trimmed.fq.gz   UK9     UK
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/UK10_trimmed.fq.gz  UK10    UK
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/WA11_trimmed.fq.gz  WA11    WA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/WA12_trimmed.fq.gz  WA12    WA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/WA13_trimmed.fq.gz  WA13    WA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/WA14_trimmed.fq.gz  WA14    WA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/WA15_trimmed.fq.gz  WA15    WA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/SA26_trimmed.fq.gz  SA26    SA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/SA27_trimmed.fq.gz  SA27    SA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/SA28_trimmed.fq.gz  SA28    SA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/SA29_trimmed.fq.gz  SA29    SA
+/bigdata/messaoudilab/apinski/Projects/COVID19/hamster_variant/data/trimmed/SA30_trimmed.fq.gz SA30    SA
